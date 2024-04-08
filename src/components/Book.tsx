@@ -1,41 +1,33 @@
 import { Params, useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import { Author, BookMetadata } from '../assets/types/types'
 
 const Book = () => {
-    const bookId: Readonly<Params<string>> = useParams()
-    const [book, setBook] = useState<object>([])
-    const [reading, setReading] = useState<boolean>(true)
+    const { id } = useParams<Params>()
+    const [book, setBook] = useState<BookMetadata | null>(null)
+    const [reading, setReading] = useState<boolean>(false)
 
-    useEffect((): void => {
-        getData().then()
-    }, [])
-
-    const getData = async (): Promise<void> => {
-        try {
-            const result: Response = await fetch(`https://gutendex.com/books/${bookId.id}`)
-            const data = await result.json()
-            setBook(data)
-            console.log(data)
-            console.log(bookId)
-        } catch (error) {
-            console.log('error')
+    useEffect(() => {
+        const getData = async (): Promise<void> => {
+            try {
+                const result: Response = await fetch(`https://gutendex.com/books/${id}`)
+                const data: BookMetadata = await result.json()
+                setBook(data)
+                console.log(data)
+            } catch (error) {
+                console.error('Error fetching book:', error)
+            }
         }
+
+        getData()
+    }, [id])
+
+    const getCoverImageUrl = (): string | null => {
+        return book?.formats['image/jpeg'] ?? ''
     }
 
-    const getCoverImageUrl = () => {
-        if (!book || !book.formats) return null
-        const imageFormat = book.formats['image/jpeg']
-        if (imageFormat) {
-            return imageFormat
-        }
-    }
-
-    const getBookText = () => {
-        if (!book || !book.formats) return null
-        const textFormat = book.formats['text/html']
-        if (textFormat) {
-            return textFormat
-        }
+    const getBookText = (): string | null => {
+        return book?.formats['text/html'] ?? ''
     }
 
     const handleReading = () => {
@@ -43,34 +35,47 @@ const Book = () => {
     }
 
     return (
-        <>
+        <div
+            style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                flexDirection: 'column',
+                height: '100vh'
+            }}
+        >
+            <h1>{book?.title}</h1>
+            {book?.authors.map((auth: Author, index: number) => <h3 key={index}>{auth.name}</h3>)}
+            {getCoverImageUrl() && <img style={{}} src={getCoverImageUrl()} alt="" />}
+
+            <button onClick={handleReading}>Read</button>
             <div
                 style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    flexDirection: 'column',
-                    gap: '2rem'
+                    position: 'absolute',
+                    top: '5vh',
+                    backgroundColor: 'rgb(232,232,232)',
+                    display: reading ? 'block' : 'none'
                 }}
             >
-                <h1>{book.title}</h1>
-                <img style={{}} src={getCoverImageUrl()} alt="" />
-                <div>{getBookText()}</div>
-                <button onClick={handleReading}>Reading</button>
-                <iframe
-                    style={{
-                        border: '2px solid gray',
-                        overflow: 'hidden',
-                        width: '80vw',
-                        height: '90vh',
-                        position: 'absolute',
-                        top: '5vh',
-                        display: reading ? 'visible' : 'none'
-                    }}
-                    src={getBookText()}
-                />
+                <button onClick={handleReading} style={{ position: 'absolute', right: 0 }}>
+                    X
+                </button>
+
+                {getBookText() && (
+                    <iframe
+                        title="Book Content"
+                        style={{
+                            border: '2px solid gray',
+                            zIndex: '1',
+                            overflow: 'hidden',
+                            width: '80vw',
+                            height: '90vh'
+                        }}
+                        src={getBookText()!} // Use non-null assertion operator (!) since getBookText() will return string | null
+                    />
+                )}
             </div>
-        </>
+        </div>
     )
 }
 

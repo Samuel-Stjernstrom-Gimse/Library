@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { BookMetadata } from '../assets/types/types.ts'
 
 const Books = () => {
-    const [books, setBooks] = useState<object[]>([])
+    const [books, setBooks] = useState<BookMetadata[]>([])
     const [page, setPage] = useState<number>(1)
 
     useEffect((): void => {
@@ -28,7 +29,7 @@ const Books = () => {
         <div>
             <button onClick={() => handlePageChange('-')}> prev page</button>
             <button onClick={() => handlePageChange('+')}> next page</button>
-            {books.map((book: object) => {
+            {books.map((book: BookMetadata) => {
                 return (
                     <div>
                         <Link to={`/books/book/${book.id}`}>{book.title}</Link>
